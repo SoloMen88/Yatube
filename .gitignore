@@ -38,6 +38,8 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
+sent_emails/
+media/
 htmlcov/
 .tox/
 .nox/
@@ -144,9 +146,3 @@ dmypy.json
 .history/
 
 .mypy_cache
-
-# папки со статикой и медиа
-static/
-yatube/posts/static/
-yatube/media/
-

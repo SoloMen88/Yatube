@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %} Последние обновления на сайте {% endblock %}
+{% block content %}
+
+{% load cache %}
+  <div class="container py-5">
+    {% include 'posts/switcher.html' with index=True %}
+    {% cache 20 index_page with page %}
+    {% for post in page_obj %}
+      {% include 'includes/posts.html' with flag_all_posts=True flag_author=True %}
+    {% endfor %}
+    {% endcache %}     
+  </div>
+  {% include 'posts/paginator.html' %}
+{% endblock %} 
