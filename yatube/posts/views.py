@@ -2,10 +2,10 @@ from django.core.paginator import Paginator
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
+from django.conf import settings
 
 from .forms import PostForm, CommentForm
 from .models import Follow, Post, Group, Comment, User
-from django.conf import settings
 
 
 def paginators(posts, page_number):
@@ -38,11 +38,9 @@ def profile(request, username):
     posts = user.posts.select_related('group').all()
     page_number = request.GET.get('page')
     page_obj = paginators(posts, page_number)
-    if request.user.pk:
-        is_follower = Follow.objects.filter(user=request.user, author=user)
-        following = False
-        if is_follower.exists():
-            following = True
+    if request.user.is_authenticated:
+        following = request.user.is_authenticated and Follow.objects.filter(
+            user=request.user, author=user)
         context = {
             'author': user,
             'page_obj': page_obj,
@@ -58,7 +56,7 @@ def profile(request, username):
 def post_detail(request, post_id):
     post = get_object_or_404(
         Post.objects.select_related('group', 'author'), id=post_id)
-    comments = Comment.objects.select_related('post').filter(post_id=post_id)
+    comments = post.comments.select_related('post').all()
     form = CommentForm()
     context = {
         'post': post,
@@ -86,20 +84,18 @@ def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     if request.user != post.author:
         return redirect('posts:post_detail', post_id)
-    else:
-        form = PostForm(request.POST or None,
-                        files=request.FILES or None,
-                        instance=post
-                        )
-        if form.is_valid():
-            post = form.save()
-            post.save()
-            return redirect('posts:post_detail', post_id)
-        context = {
-            'form': form,
-            'is_edit': True,
-        }
-        return render(request, 'posts/create_post.html', context)
+    form = PostForm(request.POST or None,
+                    files=request.FILES or None,
+                    instance=post
+                    )
+    if form.is_valid():
+        post = form.save()
+        return redirect('posts:post_detail', post_id)
+    context = {
+        'form': form,
+        'is_edit': True,
+    }
+    return render(request, 'posts/create_post.html', context)
 
 
 @login_required
@@ -129,16 +125,13 @@ def follow_index(request):
 def profile_follow(request, username):
     user = request.user
     author = User.objects.get(username=username)
-    is_follower = Follow.objects.filter(user=user, author=author)
-    if user != author and not is_follower.exists():
-        Follow.objects.create(user=user, author=author)
+    if user != author:
+        Follow.objects.get_or_create(user=user, author=author)
     return redirect(reverse('posts:profile', args=[username]))
 
 
 @login_required
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
-    is_follower = Follow.objects.filter(user=request.user, author=author)
-    if is_follower.exists():
-        is_follower.delete()
+    Follow.objects.filter(user=request.user, author=author).delete()
     return redirect('posts:profile', username=author)

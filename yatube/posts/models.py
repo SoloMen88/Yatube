@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.conf import settings
+from django.db.models.constraints import CheckConstraint
+from django.db.models.query_utils import Q
 
 User = get_user_model()
 
@@ -15,7 +18,7 @@ class Group(models.Model):
         verbose_name_plural = "Сообщества"
 
     def __str__(self):
-        return self.title
+        return self.title[:settings.NUM_OF_STR]
 
 
 class Post(models.Model):
@@ -55,7 +58,7 @@ class Post(models.Model):
         verbose_name_plural = "Посты"
 
     def __str__(self):
-        return self.text[:15]
+        return self.text[:settings.NUM_OF_STR]
 
 
 class Comment(models.Model):
@@ -70,7 +73,7 @@ class Comment(models.Model):
         'Текст комментария',
         help_text='Введите текст комментария'
     )
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         'Дата публикации',
         auto_now_add=True
     )
@@ -82,12 +85,12 @@ class Comment(models.Model):
     )
 
     class Meta:
-        ordering = ('-created',)
+        ordering = ('-pub_date',)
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
 
     def __str__(self):
-        return self.text[:15]
+        return self.text[:settings.NUM_OF_STR]
 
 
 class Follow(models.Model):
@@ -101,3 +104,13 @@ class Follow(models.Model):
         on_delete=models.CASCADE,
         related_name='following',
     )
+
+    class Meta:
+        verbose_name = "Подписка"
+        verbose_name_plural = "Подписки"
+        constraints = [
+            models.UniqueConstraint(fields=['author'],
+                                    name='double_following'),
+            models.CheckConstraint(check=~Q(user='author'),
+                                    name='user_following')
+        ]

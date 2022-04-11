@@ -94,7 +94,7 @@ class PostPagesTests(TestCase):
         self.assertEqual(post_text_0, 'Тестовый пост')
         self.assertEqual(post_author_0, (
             PostPagesTests.post.author))
-        self.assertEqual(post_group_0, Group.objects.get(pk=1))
+        self.assertEqual(post_group_0, PostPagesTests.group)
         self.assertEqual(post_image_0.name, f'posts/{self.uploaded.name}')
 
     def test_post_detail_pages_show_correct_context(self):
@@ -259,7 +259,7 @@ class CacheTests(TestCase):
     def test_cache_index(self):
         """Тест кэширования страницы index.html"""
         first_state = self.authorized_client.get(reverse('posts:posts_list'))
-        post_1 = Post.objects.get(pk=1)
+        post_1 = CacheTests.post
         post_1.text = 'Измененный пост'
         post_1.save()
         second_state = self.authorized_client.get(reverse('posts:posts_list'))
@@ -322,13 +322,35 @@ class CommentTests(TestCase):
                 f'{CommentTests.post.pk}/comment/'
             )
         )
-        self.assertFalse(
-            Comment.objects.filter(
-                text='Тестовый комментарий',
-                author=CommentTests.user,
-            ).exists(),
-        )
         self.assertEqual(Comment.objects.count(), posts_count)
+
+    def test_add_comment_pages_show_correct_context(self):
+        """Шаблон add_comment сформирован с правильным контекстом."""
+        response = self.authorized_client.get(
+            reverse('posts:add_comment', kwargs={
+                'post_id': CommentTests.post.pk}))
+        form_fields = {'text': forms.fields.CharField}
+        for value, expected in form_fields.items():
+            with self.subTest(value=value):
+                form_field = response.context.get(
+                    'form').fields.get(value)
+                self.assertIsInstance(form_field, expected)
+
+    def test_post_detail_pages_show_correct_context(self):
+        """Комментарии отображаются на нужной странице."""
+        self.authorized_client.post(
+            reverse('posts:add_comment', kwargs={
+                'post_id': CommentTests.post.pk}),
+            data={'text': 'Тестовый комментарий'},
+            follow=True
+        )
+        response = (self.authorized_client.
+                    get(reverse('posts:post_detail', kwargs={
+                        'post_id': CommentTests.post.pk})))
+        self.assertEqual(response.context.get('comments')[0].text,
+                         'Тестовый комментарий')
+        self.assertEqual(response.context.get('comments')[0].author,
+                         CommentTests.user)
 
 
 class FollowTests(TestCase):
@@ -358,7 +380,7 @@ class FollowTests(TestCase):
 
     def test_add_follow_unfollow_authorized(self):
         """Проверяем что авторизованный пользователь может подписываться
-        на других пользователей и удалять их из подписок."""
+        на других пользователей."""
         posts_count = Follow.objects.filter(user=self.user_1).count()
         response = self.authorized_client_1.post(
             reverse('posts:profile_follow', kwargs={
@@ -377,6 +399,23 @@ class FollowTests(TestCase):
         posts_count_2 = Follow.objects.filter(user=self.user_1).count()
         self.assertEqual(posts_count_2, posts_count)
 
+    def test_add_unfollow_authorized(self):
+        """Проверяем что авторизованный пользователь может удалять
+        подписки."""
+        Follow.objects.create(user=self.user_1,
+                              author=self.user_2)
+        posts_count = Follow.objects.filter(user=self.user_1).count()
+        response = self.authorized_client_1.post(
+            reverse('posts:profile_unfollow', kwargs={
+                'username': self.user_2})
+        )
+        self.assertRedirects(response, reverse(
+            'posts:profile', kwargs={
+                'username': self.user_2})
+        )
+        posts_count_2 = Follow.objects.filter(user=self.user_1).count()
+        self.assertEqual(posts_count_2, posts_count - 1)
+
     def test_add_follow_unauthorized(self):
         """Проверяем что не авторизованный пользователь не может подписываться
         на других пользователей."""
@@ -393,10 +432,10 @@ class FollowTests(TestCase):
         кто на него подписан и не появляется в ленте тех, кто не подписан."""
         Follow.objects.create(user=self.user_1,
                               author=self.user_2)
-        response = self.authorized_client_3.get('/follow/')
+        response = self.authorized_client_3.get(reverse('posts:follow_index'))
         post_num = len(response.context['page_obj'])
         self.assertEqual(post_num, 0)
-        response = self.authorized_client_1.get('/follow/')
+        response = self.authorized_client_1.get(reverse('posts:follow_index'))
         post_num = len(response.context['page_obj'])
         self.assertEqual(post_num, 0)
         self.authorized_client_2.post(
@@ -404,9 +443,9 @@ class FollowTests(TestCase):
             data={'text': 'Тестовый пост 2'},
             follow=True
         )
-        response = self.authorized_client_1.get('/follow/')
+        response = self.authorized_client_1.get(reverse('posts:follow_index'))
         post_num_2 = len(response.context['page_obj'])
         self.assertEqual(post_num_2, 1)
-        response = self.authorized_client_3.get('/follow/')
+        response = self.authorized_client_3.get(reverse('posts:follow_index'))
         post_num = len(response.context['page_obj'])
         self.assertEqual(post_num, 0)

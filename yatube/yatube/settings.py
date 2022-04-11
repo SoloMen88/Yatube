@@ -12,6 +12,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 NUM_OF_POSTS_ON_PAGE: int = 10
+NUM_OF_STR: int = 15
 
 ALLOWED_HOSTS = [
     'localhost',

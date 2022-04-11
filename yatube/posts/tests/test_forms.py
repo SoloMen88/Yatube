@@ -193,6 +193,55 @@ class PostCreateFormTests(TestCase):
         )
         self.assertEqual(Post.objects.count(), posts_count)
 
+    def test_edit_post_authorizedwith_image(self):
+        """Проверяем что при POST запросе авторизованного
+        пользователя картинка у постa будет отредактирована."""
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        uploaded2 = SimpleUploadedFile(
+            name='small2.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
+        uploaded3 = SimpleUploadedFile(
+            name='small3.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
+        self.post2 = Post.objects.create(
+            author=self.user,
+            text='Тестовый текст2',
+            image=uploaded2,
+        )
+        posts_count = Post.objects.count()
+        response = self.authorized_client.post(
+            reverse('posts:post_edit', kwargs={
+                'post_id': self.post2.pk}),
+            data={'text': 'Тестовый текст2',
+                  'image': uploaded3,
+                  },
+            follow=True
+        )
+        self.assertRedirects(response, reverse(
+            'posts:post_detail', kwargs={
+                'post_id': self.post2.pk})
+        )
+        self.assertTrue(
+            Post.objects.filter(
+                text='Тестовый текст2',
+                author=PostCreateFormTests.user,
+                group=None,
+                image='posts/small3.gif'
+            ).exists(),
+        )
+        self.assertEqual(Post.objects.count(), posts_count)
+
     def test_edit_post_not_author(self):
         """Проверяем что при POST запросе не автора
         пост не будет отредактирован."""

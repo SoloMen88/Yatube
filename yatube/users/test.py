@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 
@@ -16,20 +18,19 @@ class UserURLTests(TestCase):
         """URL-адрес использует соответствующий шаблон."""
         templates_url_names = {
             '/auth/logout/': 'users/logged_out.html',
-            # '/auth/password_change/': 'users/password_change_form.html',
         }
         for address, template in templates_url_names.items():
             with self.subTest(address=address):
                 response = self.authorized_client.get(address)
                 self.assertTemplateUsed(response, template)
-                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_urls_uses_correct_template_signup(self):
         """URL-адрес использует соответствующий шаблон для автора."""
         response = self.guest_client.get(
             '/auth/signup/')
         self.assertTemplateUsed(response, 'users/signup.html')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_urls_uses_correct_template_unauthorized(self):
         """URL-адрес использует соответствующий шаблон для гостя."""
@@ -41,4 +42,4 @@ class UserURLTests(TestCase):
             with self.subTest(address=address):
                 response = self.guest_client.get(address)
                 self.assertTemplateUsed(response, template)
-                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
