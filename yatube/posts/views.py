@@ -109,7 +109,7 @@ def add_comment(request, post_id):
         comment.post = post
         comment.save()
         return redirect('posts:post_detail', post_id)
-    return render(request, 'posts/comments.html', {'form': form,
+    return render(request, 'posts/includes/comments.html', {'form': form,
                   'post': post})
 
 

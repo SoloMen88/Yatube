@@ -43,7 +43,7 @@ class PostURLTests(TestCase):
             f'/profile/{self.user.username}/': 'posts/profile.html',
             f'/posts/{self.post.pk}/': 'posts/post_detail.html',
             '/create/': 'posts/create_post.html',
-            f'/posts/{self.post.pk}/comment/': 'posts/comments.html',
+            f'/posts/{self.post.pk}/comment/': 'posts/includes/comments.html',
             '/follow/': 'posts/follow.html',
         }
         for address, template in templates_url_names.items():
