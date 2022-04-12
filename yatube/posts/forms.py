@@ -21,7 +21,7 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ('text',)
-    
+
     def clean_text(self):
         bed = ['донцова', 'левицкий', 'шалыгин']
         data = self.cleaned_data['text'].split()

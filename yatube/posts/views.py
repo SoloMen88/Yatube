@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.conf import settings
 
 from .forms import PostForm, CommentForm
-from .models import Follow, Post, Group, Comment, User
+from .models import Follow, Post, Group, User
 
 
 def paginators(posts, page_number):
