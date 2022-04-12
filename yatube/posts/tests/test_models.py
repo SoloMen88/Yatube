@@ -78,9 +78,9 @@ class CommentModelTest(TestCase):
             text='Тестовый пост',
         )
         cls.comment = Comment.objects.create(
-            post = cls.post,
-            text = 'Тестовый комментарий',
-            author = cls.user2
+            post=cls.post,
+            text='Тестовый комментарий',
+            author=cls.user2
         )
 
     def test_verbose_name(self):
