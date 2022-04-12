@@ -26,6 +26,6 @@
     {% for post in page_obj %}
       {% include 'includes/posts.html' with flag_all_posts=False %}
     {% endfor %}    
-    {% include 'posts/paginator.html' %}
+    {% include 'posts/includes/paginator.html' %}
   </div>
 {% endblock %} 

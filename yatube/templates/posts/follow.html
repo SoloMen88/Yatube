@@ -2,10 +2,10 @@
 {% block title %} Подписки на авторов {% endblock %}
 {% block content %}
   <div class="container py-5">
-    {% include 'posts/switcher.html' with follow=True %}
+    {% include 'posts/includes/switcher.html' with follow=True %}
     {% for post in page_obj %}
       {% include 'includes/posts.html' with flag_all_posts=True flag_author=True %}
     {% endfor %}
   </div>
-  {% include 'posts/paginator.html' %}
+  {% include 'posts/includes/paginator.html' %}
 {% endblock %} 
