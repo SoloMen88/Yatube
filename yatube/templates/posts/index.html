@@ -4,7 +4,7 @@
 {% load cache %}
   <div class="container py-5">
     {% include 'posts/includes/switcher.html' with index=True %}
-    {% cache 20 index_page with page %}
+    {% cache 20 index_page with page request.user.username %}
       {% for post in page_obj %}
         {% include 'includes/posts.html' with flag_all_posts=True flag_author=True %}
       {% endfor %}

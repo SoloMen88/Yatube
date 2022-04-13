@@ -329,12 +329,8 @@ class CommentTests(TestCase):
         response = self.authorized_client.get(
             reverse('posts:add_comment', kwargs={
                 'post_id': CommentTests.post.pk}))
-        form_fields = {'text': forms.fields.CharField}
-        for value, expected in form_fields.items():
-            with self.subTest(value=value):
-                form_field = response.context.get(
-                    'form').fields.get(value)
-                self.assertIsInstance(form_field, expected)
+        form_field = response.context.get('form').fields.get('text')
+        self.assertIsInstance(form_field, forms.fields.CharField)
 
     def test_post_detail_pages_show_correct_context(self):
         """Комментарии отображаются на нужной странице."""

@@ -16,19 +16,39 @@ class PostForm(forms.ModelForm):
 
 
 class CommentForm(forms.ModelForm):
-    # text = forms.CharField()
 
     class Meta:
         model = Comment
         fields = ('text',)
 
     def clean_text(self):
-        bed = ['донцова', 'левицкий', 'шалыгин']
-        data = self.cleaned_data['text'].split()
-        data_corr = ''
-        for t in data:
-            if t.lower() in bed:
-                data_corr += ('*' * len(t)) + ' '
-            else:
-                data_corr += t + ' '
-        return data_corr.rstrip()
+        with open('posts/bed_author.txt', 'r', encoding='utf-8') as file:
+            variants = file.read().split()
+        message = self.cleaned_data['text']
+        # Нашел такой вариант на стеке, разобрался как работает,
+        # вроде более эффективно фильтрует, но мне кажется больше ресурсов ест.
+        # Для подсчета расстояний Левенштейна нашел модуль, но его нужно
+        # устанавливать - не проходят тесты на практикуме.
+        ln = len(variants)
+        filtred_message = ''
+        string = ''
+        pattern = '*'
+        for i in message:
+            string += i
+            string2 = string.lower()
+            flag = 0
+            for j in variants:
+                if string2 not in j:
+                    flag += 1
+                if string2 == j:
+                    filtred_message += pattern * len(string)
+                    flag -= 1
+                    string = ''
+            if flag == ln:
+                filtred_message += string
+                string = ''
+        if string2 != '' and string2 not in variants:
+            filtred_message += string
+        elif string2 != '':
+            filtred_message += pattern * len(string)
+        return filtred_message
