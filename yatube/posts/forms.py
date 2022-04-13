@@ -22,8 +22,8 @@ class CommentForm(forms.ModelForm):
         fields = ('text',)
 
     def clean_text(self):
-        with open('posts/bed_author.txt', 'r', encoding='utf-8') as file:
-            variants = file.read().split()
+        with open('yatube/posts/bed_author.txt', 'r', encoding='utf-8') as bed:
+            variants = bed.read().split()
         message = self.cleaned_data['text']
         # Нашел такой вариант на стеке, разобрался как работает,
         # вроде более эффективно фильтрует, но мне кажется больше ресурсов ест.
